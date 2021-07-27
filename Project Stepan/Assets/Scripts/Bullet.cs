@@ -4,26 +4,39 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [SerializeField] private float _speedWhenShift;
-    private Transform _enemy;
-    public static bool FindEnemy;
-    
-    void Start()
+
+    private bool already;
+    private bool moving;
+
+    private Rigidbody2D rb;
+
+    private void Start()
     {
+        rb = GetComponent<Rigidbody2D>();
         Destroy(gameObject, 1.5f);
     }
 
-    void Update()
+    private void Update()
     {
-        if (!Bullet.FindEnemy)
+        if(Hero.isForward && already == false)
         {
-            transform.Translate(Vector3.up * 18 * Time.deltaTime);
+            // transform.Translate(Vector3.up * 18 * Time.deltaTime);
+            rb.AddForce(Vector2.up * 0.1f);
+            already = true;
         }
 
-        if (Bullet.FindEnemy)
+        if(Hero.isRight && already == false )
         {
-            _enemy = GameObject.FindGameObjectWithTag("Enemy").transform;
-            transform.position = Vector2.MoveTowards(transform.position, _enemy.position, _speedWhenShift * Time.deltaTime);
+            // transform.Translate(Vector3.right * 18 * Time.deltaTime);
+            rb.AddForce(Vector2.right * 0.1f);
+            already = true;
+        }
+
+        if(Hero.isLeft && already == false)
+        {
+            // transform.Translate(Vector3.left * 18 * Time.deltaTime);
+            rb.AddForce(Vector2.left * 0.1f);
+            already = true;
         }
     }
 }
