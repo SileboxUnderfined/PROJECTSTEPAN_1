@@ -5,54 +5,86 @@ using UnityEngine;
 
 public class Hero : MonoBehaviour
 {
-    [SerializeField] private float _speed;
+
+    [SerializeField] private Animator _anim;
+
+
+
+    [SerializeField] private GameObject _shootEffect;
     [SerializeField] private GameObject _bullet;
+    [SerializeField] private GameObject _bulletShift;
     [SerializeField] private Transform _spawnPosBullet;
+    [SerializeField] private Transform _spawnPosBulletRight;
+    [SerializeField] private Transform _spawnPosBulletLeft;
     [SerializeField] private int _hp;
+    [SerializeField] private float _speed;
+
     private float _startTimeShot;
     public float TimeShot;
-    
-    void Start()
+    private bool isFocus;
+
+
+
+    public static bool isForward, isLeft, isRight;
+
+    private void Start()
     {
         _startTimeShot = TimeShot;
     }
-    void Update()
+
+    private void Update()
     {
-        if (Input.GetKey(KeyCode.W))
-        {
-            transform.Translate(Vector3.up * _speed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            transform.Translate(Vector3.left * _speed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            transform.Translate(Vector3.down * _speed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            transform.Translate(Vector3.right * _speed * Time.deltaTime);
-        }
-        //малик только не пиши мне что можно же через rb.velocite("Horizontal"), тут так не получится тк 2д управление в 3д проекте
+        Moving();
+        FocusMode();
+        Shooting();
 
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            _speed -= 2;
-            Bullet.FindEnemy = true;
-        }
+    }
 
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-        {
-            _speed += 2;
-            Bullet.FindEnemy = false;
-        }
 
+
+    private void Shooting()
+    {
         if (Input.GetKey(KeyCode.Z))
         {
-            if (_startTimeShot <= 0)
+
+            if (_startTimeShot <= 0 && isFocus == false)
             {
-                Instantiate(_bullet, _spawnPosBullet.position, Quaternion.identity);
+                if(Hero.isForward)
+                {
+                    Instantiate(_bullet, _spawnPosBullet.position, _spawnPosBullet.rotation);
+                    Instantiate(_shootEffect, _spawnPosBullet.position, _spawnPosBullet.rotation);                    
+                }
+                if(Hero.isLeft)
+                {
+                    Instantiate(_bullet, _spawnPosBulletLeft.position, _spawnPosBulletLeft.rotation);
+                    Instantiate(_shootEffect, _spawnPosBulletLeft.position, _spawnPosBulletLeft.rotation);                        
+                }
+                if(Hero.isRight)
+                {
+                    Instantiate(_bullet, _spawnPosBulletRight.position, _spawnPosBulletRight.rotation);
+                    Instantiate(_shootEffect, _spawnPosBulletRight.position, _spawnPosBulletRight.rotation);                        
+                }
+                _startTimeShot = TimeShot;
+            }
+
+
+            if (_startTimeShot <= 0 && isFocus == true)
+            {
+                if(Hero.isForward)
+                {
+                    Instantiate(_bulletShift, _spawnPosBullet.position, _spawnPosBullet.rotation);
+                    Instantiate(_shootEffect, _spawnPosBullet.position, _spawnPosBullet.rotation);                    
+                }
+                if(Hero.isLeft)
+                {
+                    Instantiate(_bulletShift, _spawnPosBulletLeft.position, _spawnPosBulletLeft.rotation);
+                    Instantiate(_shootEffect, _spawnPosBulletLeft.position, _spawnPosBulletLeft.rotation);                        
+                }
+                if(Hero.isRight)
+                {
+                    Instantiate(_bulletShift, _spawnPosBulletRight.position, _spawnPosBulletRight.rotation);
+                    Instantiate(_shootEffect, _spawnPosBulletRight.position, _spawnPosBulletRight.rotation);                        
+                }
                 _startTimeShot = TimeShot;
             }
             else
@@ -62,7 +94,90 @@ public class Hero : MonoBehaviour
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+
+
+    private void Moving()
+    {
+        Vector3 moveVector = Vector3.zero;
+        float HorizontalDirectionAxis = Input.GetAxis("Horizontal");
+        float VerticalDirectionAxis = Input.GetAxis("Vertical");
+
+        moveVector.y = VerticalDirectionAxis;
+        moveVector.x = HorizontalDirectionAxis;
+
+        transform.Translate(moveVector * _speed * Time.deltaTime);
+        if (HorizontalDirectionAxis > 0f || HorizontalDirectionAxis < 0f)
+        {
+            _anim.SetBool("Idle", false);
+            _anim.SetFloat("DirectionHorizontal", HorizontalDirectionAxis);
+
+        } else
+        {
+            _anim.SetBool("Idle", true);
+            if (VerticalDirectionAxis < 0f) _anim.SetBool("Mirrored", true); else _anim.SetBool("Mirrored", false);
+        }
+        _anim.SetFloat("DirectionVertical", VerticalDirectionAxis);
+        
+        /*if (Input.GetKey(KeyCode.W))
+        {
+            _anim.SetBool("isLeft", false);
+            _anim.SetBool("isRight", false);
+            transform.Translate(Vector3.up * _speed * Time.deltaTime);
+
+            Hero.isForward = true;
+            Hero.isLeft = false;
+            Hero.isRight = false;
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            _anim.SetBool("isLeft", true);
+            _anim.SetBool("isRight", false);
+            transform.Translate(Vector3.left * _speed * Time.deltaTime);
+
+            Hero.isForward = false;
+            Hero.isLeft = true;
+            Hero.isRight = false;
+        }
+        if (Input.GetKey(KeyCode.S))
+        {
+            transform.Translate(Vector3.down * _speed * Time.deltaTime);
+
+            Hero.isForward = true;
+            Hero.isLeft = false;
+            Hero.isRight = false;
+
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+
+            _anim.SetBool("isLeft", false);
+            _anim.SetBool("isRight", true);
+            transform.Translate(Vector3.right * _speed * Time.deltaTime);
+
+            Hero.isForward = false;
+            Hero.isLeft = false;
+            Hero.isRight = true;
+        }*/
+    }
+
+
+
+    private void FocusMode()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            _speed -= 2;
+            isFocus = true;
+        }
+
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            _speed += 2;
+            isFocus = false;
+        }
+
+    }
+    private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.tag == "Enemy")
         {
